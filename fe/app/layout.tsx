@@ -16,8 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Banking CRM Agent",
-  description: "Agentic AI assistant for Relationship Managers",
+  title: "Lakshya — Banking CRM Agent",
+  description:
+    "Lakshya is an agentic AI co-pilot for bank Relationship Managers — find your next prospect.",
 };
 
 type Props = Readonly<{ children: React.ReactNode }>;

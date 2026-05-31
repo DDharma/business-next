@@ -63,9 +63,12 @@ export const ChatThread = ({ chatId: initialId }: Props) => {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex items-center border-b px-6 py-3">
-        <div className="text-sm font-semibold tracking-wide">Banking CRM Agent</div>
-        <div className="ml-3 text-xs text-muted-foreground">
+      <header className="flex items-baseline border-b px-6 py-3">
+        <div className="text-base font-semibold tracking-tight">Lakshya</div>
+        <div className="ml-2 text-xs uppercase tracking-widest text-muted-foreground">
+          Find your next prospect
+        </div>
+        <div className="ml-auto text-xs text-muted-foreground">
           {stream.chatId ? `Chat · ${stream.chatId.slice(0, 8)}` : "New chat"}
         </div>
       </header>

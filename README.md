@@ -1,8 +1,10 @@
-# Banking CRM Agent
+# Lakshya — Banking CRM Agent
 
-> Conversational, local-LLM-powered AI assistant for Bank Relationship Managers.
+> **Lakshya** (लक्ष्य) — Sanskrit for *target / aim*.
+>
+> A conversational, local-LLM-powered AI co-pilot for bank Relationship Managers.
 > Given a natural-language ask like *"find 5 high-value personal-loan prospects in Mumbai"*,
-> the agent queries the bank's customer database, scores each candidate with an explainable
+> Lakshya queries the bank's customer database, scores each candidate with an explainable
 > heuristic, picks the best-fit product, and drafts a personalized WhatsApp pitch per customer.
 
 This is the take-home assignment "Agentic AI for Banking CRM" (see

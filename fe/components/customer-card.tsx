@@ -5,7 +5,13 @@ import { Check, Copy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { CustomerCard as Card_ } from "@/lib/types";
 import { SCORE_THRESHOLDS } from "@/utils/constants";
@@ -38,20 +44,25 @@ export const CustomerCard = ({ card }: Props) => {
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
-        <div className="min-w-0">
-          <CardTitle className="truncate text-base">{card.name}</CardTitle>
-          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{card.city}</span>
-            <span>·</span>
-            <span>{formatINR(card.monthly_income)} / mo</span>
+      <CardHeader>
+        <CardTitle className="truncate text-base">{card.name}</CardTitle>
+        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+          <span>{card.city}</span>
+          <span>·</span>
+          <span>{formatINR(card.monthly_income)} / mo</span>
+        </div>
+        <CardAction>
+          <div
+            className={`flex items-baseline gap-1.5 rounded-lg border px-3 py-1.5 ${scoreColor(card.score)}`}
+          >
+            <span className="text-[10px] uppercase tracking-widest opacity-70">
+              Score
+            </span>
+            <span className="text-xl font-semibold leading-none tabular-nums">
+              {card.score.toFixed(1)}
+            </span>
           </div>
-        </div>
-        <div
-          className={`shrink-0 rounded-md border px-2 py-1 text-xs font-medium tabular-nums ${scoreColor(card.score)}`}
-        >
-          {card.score.toFixed(1)}
-        </div>
+        </CardAction>
       </CardHeader>
 
       <CardContent className="space-y-4">

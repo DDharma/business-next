@@ -25,7 +25,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="Banking CRM Agent", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Lakshya — Banking CRM Agent", version="0.1.0", lifespan=lifespan)
 
 settings = get_settings()
 app.add_middleware(

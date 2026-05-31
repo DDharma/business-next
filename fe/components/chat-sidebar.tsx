@@ -47,8 +47,8 @@ export const ChatSidebar = ({ refreshKey = 0 }: Props) => {
   const activeId = pathname?.startsWith("/chat/") ? pathname.split("/")[2] : null;
 
   return (
-    <aside className="flex h-svh w-[260px] shrink-0 flex-col border-r bg-zinc-950/40">
-      <div className="flex items-center justify-between px-3 py-3">
+    <aside className="flex h-svh w-[260px] shrink-0 flex-col overflow-hidden border-r bg-zinc-950/40">
+      <div className="flex shrink-0 items-center justify-between px-3 py-3">
         <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Chats
         </div>
@@ -60,7 +60,7 @@ export const ChatSidebar = ({ refreshKey = 0 }: Props) => {
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 px-2 pb-3">
+      <ScrollArea className="min-h-0 flex-1 px-2 pb-3">
         {chats === null ? (
           <div className="space-y-2 px-1">
             {Array.from({ length: 6 }).map((_, i) => (
