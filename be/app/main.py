@@ -100,7 +100,11 @@ def _history_for_graph(chat_id: str | None) -> list[dict]:
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
-    chat_id = req.chat_id or db.create_chat(req.message.strip()[:CHAT_TITLE_MAX_LEN])["id"]
+    # Validate any provided chat_id — FE may hold a stale id (chat deleted
+    # server-side). Fall through to create a fresh chat in that case.
+    chat_id = req.chat_id if req.chat_id and db.get_chat(req.chat_id) else None
+    if not chat_id:
+        chat_id = db.create_chat(req.message.strip()[:CHAT_TITLE_MAX_LEN])["id"]
 
     db.add_message(chat_id, role="user", content=req.message)
     history = _history_for_graph(chat_id)
