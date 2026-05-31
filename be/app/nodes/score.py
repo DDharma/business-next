@@ -1,5 +1,3 @@
-"""Score every candidate, keep the top-N."""
-
 from __future__ import annotations
 
 import time

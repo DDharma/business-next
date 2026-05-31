@@ -1,12 +1,5 @@
-"""
-LangGraph wiring.
-
-Flow:
-                       ┌───────────────► retrieve ─► score ─► recommend ─┐
-    START → parse_intent                                                 ▼
-                       └─ (rewrite_message) ──────────────────────► draft_messages → END
-"""
-
+# LangGraph wiring. parse_intent fans out to retrieve→score→recommend→draft_messages,
+# or short-circuits straight to draft_messages on a rewrite_message intent.
 from __future__ import annotations
 
 from langgraph.graph import END, START, StateGraph

@@ -1,6 +1,4 @@
-// NDJSON streaming client. Server flushes one JSON object per line; we read
-// the response body via fetch + ReadableStream and parse each line.
-
+import { API_BASE } from "@/utils/constants";
 import type { StepEvent } from "./types";
 
 export type StreamEvent =
@@ -15,13 +13,10 @@ export type StreamCallbacks = {
   signal?: AbortSignal;
 };
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-
-export async function streamChat(
+export const streamChat = async (
   body: { chat_id?: string | null; message: string },
   cb: StreamCallbacks,
-) {
+): Promise<void> => {
   let res: Response;
   try {
     res = await fetch(`${API_BASE}/chat`, {
@@ -60,11 +55,10 @@ export async function streamChat(
         try {
           cb.onEvent(JSON.parse(line) as StreamEvent);
         } catch {
-          // skip malformed line; the stream may still be useful
+          // skip malformed line
         }
       }
     }
-    // flush any trailing line
     const tail = buf.trim();
     if (tail) {
       try {
@@ -78,4 +72,4 @@ export async function streamChat(
   } finally {
     cb.onClose?.();
   }
-}
+};

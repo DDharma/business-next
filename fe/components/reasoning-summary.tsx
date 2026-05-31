@@ -5,15 +5,15 @@ import { ChevronDown, ChevronRight, Loader2, Sparkles } from "lucide-react";
 
 import { ReasoningLog } from "@/components/reasoning-log";
 import type { AssistantTurn } from "@/hooks/use-chat-stream";
+import { StreamStatus } from "@/utils/enums";
 
-function fmtSeconds(ms?: number): string {
+const fmtSeconds = (ms?: number): string => {
   if (!ms) return "…";
   const s = ms / 1000;
   return s >= 10 ? `${s.toFixed(0)}s` : `${s.toFixed(1)}s`;
-}
+};
 
-function liveSummary(turn: AssistantTurn): string {
-  // While streaming, show the current node label
+const liveSummary = (turn: AssistantTurn): string => {
   for (let i = turn.events.length - 1; i >= 0; i--) {
     const ev = turn.events[i];
     if (ev.type === "node_started") return ev.label;
@@ -21,11 +21,13 @@ function liveSummary(turn: AssistantTurn): string {
       return ev.preview.length > 60 ? ev.preview.slice(0, 57) + "…" : ev.preview;
   }
   return "Thinking…";
-}
+};
 
-export function ReasoningSummary({ turn }: { turn: AssistantTurn }) {
+type Props = { turn: AssistantTurn };
+
+export const ReasoningSummary = ({ turn }: Props) => {
   const [expanded, setExpanded] = useState(false);
-  const streaming = turn.status === "streaming";
+  const streaming = turn.status === StreamStatus.Streaming;
   const cardsCount = turn.cards.length;
 
   const headerLabel = streaming
@@ -70,4 +72,4 @@ export function ReasoningSummary({ turn }: { turn: AssistantTurn }) {
       )}
     </div>
   );
-}
+};

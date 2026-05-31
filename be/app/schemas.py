@@ -3,8 +3,6 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 
-# ── LLM-facing structured output ─────────────────────────────────────────
-
 class Filters(BaseModel):
     product: str | None = Field(
         default=None,
@@ -22,8 +20,6 @@ class IntentSchema(BaseModel):
     notes: str | None = None
 
 
-# ── Scoring ──────────────────────────────────────────────────────────────
-
 class ScoreFactor(BaseModel):
     name: str
     weight: float
@@ -36,8 +32,6 @@ class CustomerScore(BaseModel):
     score: float
     factors: list[ScoreFactor]
 
-
-# ── Customer card (final UI payload) ─────────────────────────────────────
 
 class CustomerCard(BaseModel):
     customer_id: str
@@ -52,8 +46,6 @@ class CustomerCard(BaseModel):
     whatsapp_message: str
     opener: str | None = None
 
-
-# ── Streaming step events ────────────────────────────────────────────────
 
 class StepEvent(BaseModel):
     type: Literal[

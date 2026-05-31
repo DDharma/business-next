@@ -11,9 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { listChats } from "@/lib/api";
 import type { ChatSummary } from "@/lib/types";
 
-function relativeTime(iso: string): string {
-  const then = new Date(iso).getTime();
-  const diff = Date.now() - then;
+const relativeTime = (iso: string): string => {
+  const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60_000);
   if (m < 1) return "just now";
   if (m < 60) return `${m}m ago`;
@@ -22,9 +21,11 @@ function relativeTime(iso: string): string {
   const d = Math.floor(h / 24);
   if (d < 7) return `${d}d ago`;
   return new Date(iso).toLocaleDateString();
-}
+};
 
-export function ChatSidebar({ refreshKey = 0 }: { refreshKey?: number }) {
+type Props = { refreshKey?: number };
+
+export const ChatSidebar = ({ refreshKey = 0 }: Props) => {
   const pathname = usePathname();
   const [chats, setChats] = useState<ChatSummary[] | null>(null);
 
@@ -43,9 +44,7 @@ export function ChatSidebar({ refreshKey = 0 }: { refreshKey?: number }) {
     };
   }, [refreshKey]);
 
-  const activeId = pathname?.startsWith("/chat/")
-    ? pathname.split("/")[2]
-    : null;
+  const activeId = pathname?.startsWith("/chat/") ? pathname.split("/")[2] : null;
 
   return (
     <aside className="flex h-svh w-[260px] shrink-0 flex-col border-r bg-zinc-950/40">
@@ -99,4 +98,4 @@ export function ChatSidebar({ refreshKey = 0 }: { refreshKey?: number }) {
       </ScrollArea>
     </aside>
   );
-}
+};

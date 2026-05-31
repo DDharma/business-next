@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Any
 
 from supabase import Client, create_client
 
 from .config import get_settings
+from .constants import SIDEBAR_CHAT_LIMIT
 
 
 @lru_cache
@@ -33,11 +35,8 @@ def ping() -> bool:
         return False
 
 
-# ── Chats / messages ─────────────────────────────────────────────────────
-
 def create_chat(title: str) -> dict:
-    res = get_db().table("chats").insert({"title": title}).execute()
-    return res.data[0]
+    return get_db().table("chats").insert({"title": title}).execute().data[0]
 
 
 def get_chat(chat_id: str) -> dict | None:
@@ -45,7 +44,7 @@ def get_chat(chat_id: str) -> dict | None:
     return (res.data or [None])[0]
 
 
-def list_chats(limit: int = 50) -> list[dict]:
+def list_chats(limit: int = SIDEBAR_CHAT_LIMIT) -> list[dict]:
     res = (
         get_db()
         .table("chats")
@@ -58,7 +57,6 @@ def list_chats(limit: int = 50) -> list[dict]:
 
 
 def touch_chat(chat_id: str) -> None:
-    from datetime import datetime, timezone
     now = datetime.now(timezone.utc).isoformat()
     get_db().table("chats").update({"updated_at": now}).eq("id", chat_id).execute()
 

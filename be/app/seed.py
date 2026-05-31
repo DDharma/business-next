@@ -1,22 +1,8 @@
-"""
-Faker seeder for the Banking CRM demo.
-
-Run from be/:
-    python -m app.seed
-
-Generates:
-  • 4 products
-  • ~400 customers across 10 Indian metros, tiered by income
-  • 12 months of transactions per customer (~50 each)
-  • ~15% of customers deliberately shaped as strong personal-loan prospects
-    (high income, no existing personal loan, stable salary, EMI spend pattern)
-"""
-
+# Faker seeder. Run from be/: `python -m app.seed`.
 from __future__ import annotations
 
 import random
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import datetime, timedelta
 
 from faker import Faker
 
@@ -78,14 +64,12 @@ PRODUCTS = [
     },
 ]
 
-# Income tier → monthly INR range
 TIER_INCOME = {
     "low": (15_000, 30_000),
     "mid": (30_000, 80_000),
     "high": (80_000, 200_000),
     "premium": (200_000, 600_000),
 }
-# Tier distribution (sums to 1.0)
 TIER_WEIGHTS = {"low": 0.15, "mid": 0.35, "high": 0.30, "premium": 0.20}
 
 
@@ -104,7 +88,6 @@ def gen_phone() -> str:
 
 
 def make_customer(*, force_prospect: bool = False) -> dict:
-    """Build one customer dict ready for Supabase insert."""
     tier = "high" if force_prospect else pick_tier()
     low, high = TIER_INCOME[tier]
     monthly = round(random.uniform(low, high), 2)
@@ -144,7 +127,6 @@ def make_customer(*, force_prospect: bool = False) -> dict:
 
 
 def make_transactions(customer: dict, *, force_prospect: bool = False) -> list[dict]:
-    """Generate ~12 months of transactions for a customer."""
     txns: list[dict] = []
     cid = customer["id"]
     monthly = float(customer["monthly_income"])

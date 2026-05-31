@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from . import db
 from .config import get_settings
+from .constants import CHAT_TITLE_MAX_LEN
 from .events import EventBus
 from .graph import build_graph
 
@@ -35,12 +36,9 @@ app.add_middleware(
 )
 
 
-# ── Health ───────────────────────────────────────────────────────────────
-
 @app.get("/health")
 async def health() -> dict:
     s = get_settings()
-
     supabase_ok = db.ping()
     customers = db.count_customers() if supabase_ok else 0
 
@@ -51,8 +49,7 @@ async def health() -> dict:
             r = await c.get(f"{s.lm_studio_url}/models")
             if r.status_code == 200:
                 lm_studio_ok = True
-                data = r.json().get("data", [])
-                lm_studio_models = [m.get("id") for m in data if m.get("id")]
+                lm_studio_models = [m.get("id") for m in r.json().get("data", []) if m.get("id")]
     except Exception:
         pass
 
@@ -64,8 +61,6 @@ async def health() -> dict:
         "configured_model": s.lm_studio_model,
     }
 
-
-# ── Chats CRUD ───────────────────────────────────────────────────────────
 
 class ChatCreate(BaseModel):
     title: str | None = None
@@ -91,8 +86,6 @@ async def get_chat(chat_id: str) -> dict:
     return chat
 
 
-# ── Streaming chat endpoint (NDJSON) ─────────────────────────────────────
-
 class ChatRequest(BaseModel):
     chat_id: str | None = None
     message: str = Field(..., min_length=1, max_length=2000)
@@ -107,15 +100,7 @@ def _history_for_graph(chat_id: str | None) -> list[dict]:
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
-    """
-    Streams agent execution as NDJSON — one JSON object per line.
-
-    First line:  {"type":"chat_id", "chat_id": "..."}
-    Then:        StepEvent objects (node_started, tool_call, tool_result,
-                                    node_finished, card, error)
-    Last line:   {"type":"done", "chat_id": "...", "cards": N, "duration_ms": M}
-    """
-    chat_id = req.chat_id or db.create_chat(req.message.strip()[:80])["id"]
+    chat_id = req.chat_id or db.create_chat(req.message.strip()[:CHAT_TITLE_MAX_LEN])["id"]
 
     db.add_message(chat_id, role="user", content=req.message)
     history = _history_for_graph(chat_id)
@@ -127,7 +112,7 @@ async def chat(req: ChatRequest):
         state = {
             "chat_id": chat_id,
             "user_message": req.message,
-            "history": history[:-1],  # exclude the message we just stored
+            "history": history[:-1],
             "emit": bus.emit,
         }
         loop = asyncio.get_running_loop()

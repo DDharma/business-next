@@ -8,21 +8,41 @@ import { MessageAssistant } from "@/components/message-assistant";
 import { MessageUser } from "@/components/message-user";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChatStream } from "@/hooks/use-chat-stream";
+import { SAMPLE_PROMPTS } from "@/utils/constants";
 
 type Props = { chatId?: string };
 
-const SAMPLE_PROMPTS = [
-  "Find 5 high-value personal-loan prospects in Mumbai",
-  "Show me 3 credit card prospects in Bengaluru",
-  "Top customers for a home loan, salaried, above ₹1L/mo",
-];
+type EmptyStateProps = { onPick: (text: string) => void };
 
-export function ChatThread({ chatId: initialId }: Props) {
+const EmptyState = ({ onPick }: EmptyStateProps) => (
+  <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+    <div className="text-xl font-semibold tracking-tight">
+      Find your next high-value prospect
+    </div>
+    <p className="mt-2 max-w-md text-sm text-muted-foreground">
+      Ask in plain English — the agent retrieves customers, scores them, and
+      drafts a personalized WhatsApp message for each.
+    </p>
+    <div className="mt-6 flex w-full max-w-xl flex-col gap-2">
+      {SAMPLE_PROMPTS.map((p) => (
+        <button
+          key={p}
+          type="button"
+          onClick={() => onPick(p)}
+          className="rounded-lg border bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-muted"
+        >
+          {p}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+export const ChatThread = ({ chatId: initialId }: Props) => {
   const router = useRouter();
   const stream = useChatStream(initialId ?? null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Push the new chat_id into the URL once the backend assigns one
   useEffect(() => {
     if (stream.chatId && stream.chatId !== initialId) {
       router.replace(`/chat/${stream.chatId}`, { scroll: false });
@@ -30,12 +50,14 @@ export function ChatThread({ chatId: initialId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stream.chatId]);
 
-  // Auto-scroll to bottom when turns grow or stream updates
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [stream.turns.length, stream.turns[stream.turns.length - 1]?.assistant.events.length]);
+  }, [
+    stream.turns.length,
+    stream.turns[stream.turns.length - 1]?.assistant.events.length,
+  ]);
 
   const empty = !stream.isLoadingHistory && stream.turns.length === 0;
 
@@ -61,13 +83,7 @@ export function ChatThread({ chatId: initialId }: Props) {
             </div>
           )}
 
-          {empty && (
-            <EmptyState
-              onPick={(p) => {
-                stream.send(p);
-              }}
-            />
-          )}
+          {empty && <EmptyState onPick={(p) => stream.send(p)} />}
 
           {!stream.isLoadingHistory && stream.turns.length > 0 && (
             <ol className="space-y-6">
@@ -92,30 +108,4 @@ export function ChatThread({ chatId: initialId }: Props) {
       </div>
     </div>
   );
-}
-
-function EmptyState({ onPick }: { onPick: (text: string) => void }) {
-  return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-      <div className="text-xl font-semibold tracking-tight">
-        Find your next high-value prospect
-      </div>
-      <p className="mt-2 max-w-md text-sm text-muted-foreground">
-        Ask in plain English — the agent retrieves customers, scores them, and
-        drafts a personalized WhatsApp message for each.
-      </p>
-      <div className="mt-6 flex w-full max-w-xl flex-col gap-2">
-        {SAMPLE_PROMPTS.map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => onPick(p)}
-            className="rounded-lg border bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-muted"
-          >
-            {p}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+};

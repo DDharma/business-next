@@ -5,17 +5,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getChat } from "@/lib/api";
 import { streamChat } from "@/lib/stream";
 import type { Chat, CustomerCard, StepEvent } from "@/lib/types";
+import { MessageRole, StreamStatus } from "@/utils/enums";
 
 export type AssistantTurn = {
   events: StepEvent[];
   cards: CustomerCard[];
   durationMs?: number;
-  status: "streaming" | "done" | "error";
+  status: StreamStatus;
   error?: string;
 };
 
 export type Turn = {
-  id: string;          // stable key for React lists
+  id: string;
   user: string;
   assistant: AssistantTurn;
 };
@@ -29,44 +30,40 @@ export type UseChatStream = {
   cancel: () => void;
 };
 
-function newTurnId() {
-  return Math.random().toString(36).slice(2, 10);
-}
+const newTurnId = (): string => Math.random().toString(36).slice(2, 10);
 
-function turnsFromChat(chat: Chat): Turn[] {
+const turnsFromChat = (chat: Chat): Turn[] => {
   const out: Turn[] = [];
   const msgs = [...chat.messages].sort(
     (a, b) => a.created_at.localeCompare(b.created_at),
   );
   for (let i = 0; i < msgs.length; i++) {
     const m = msgs[i];
-    if (m.role !== "user") continue;
-    const assistant = msgs[i + 1]?.role === "assistant" ? msgs[i + 1] : null;
+    if (m.role !== MessageRole.User) continue;
+    const next = msgs[i + 1];
+    const assistant = next?.role === MessageRole.Assistant ? next : null;
     out.push({
       id: m.id,
       user: m.content,
       assistant: {
-        events: (assistant?.metadata?.events as StepEvent[] | undefined) ?? [],
-        cards: (assistant?.metadata?.cards as CustomerCard[] | undefined) ?? [],
-        durationMs:
-          (assistant?.metadata as { duration_ms?: number } | undefined)
-            ?.duration_ms,
-        status: assistant?.metadata?.error ? "error" : "done",
+        events: assistant?.metadata?.events ?? [],
+        cards: assistant?.metadata?.cards ?? [],
+        durationMs: assistant?.metadata?.duration_ms,
+        status: assistant?.metadata?.error ? StreamStatus.Error : StreamStatus.Done,
         error: assistant?.metadata?.error ?? undefined,
       },
     });
   }
   return out;
-}
+};
 
-export function useChatStream(initialChatId: string | null): UseChatStream {
+export const useChatStream = (initialChatId: string | null): UseChatStream => {
   const [chatId, setChatId] = useState<string | null>(initialChatId);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingHistory, setLoadingHistory] = useState(!!initialChatId);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Rehydrate on mount (or when initialChatId changes)
   useEffect(() => {
     let cancelled = false;
     abortRef.current?.abort();
@@ -112,7 +109,7 @@ export function useChatStream(initialChatId: string | null): UseChatStream {
         {
           id: turnId,
           user: text,
-          assistant: { events: [], cards: [], status: "streaming" },
+          assistant: { events: [], cards: [], status: StreamStatus.Streaming },
         },
       ]);
       setIsStreaming(true);
@@ -145,7 +142,7 @@ export function useChatStream(initialChatId: string | null): UseChatStream {
               patchTurn((a) => ({
                 ...a,
                 durationMs: ev.duration_ms,
-                status: a.error ? "error" : "done",
+                status: a.error ? StreamStatus.Error : StreamStatus.Done,
               }));
               return;
             }
@@ -154,18 +151,18 @@ export function useChatStream(initialChatId: string | null): UseChatStream {
               if (ev.type === "card") next.cards = [...a.cards, ev.card];
               if (ev.type === "error") {
                 next.error = ev.message;
-                next.status = "error";
+                next.status = StreamStatus.Error;
               }
               return next;
             });
           },
           onError: (e) => {
-            patchTurn((a) => ({ ...a, status: "error", error: e.message }));
+            patchTurn((a) => ({ ...a, status: StreamStatus.Error, error: e.message }));
           },
           onClose: () => {
             setIsStreaming(false);
             patchTurn((a) =>
-              a.status === "streaming" ? { ...a, status: "done" } : a,
+              a.status === StreamStatus.Streaming ? { ...a, status: StreamStatus.Done } : a,
             );
           },
         },
@@ -175,4 +172,4 @@ export function useChatStream(initialChatId: string | null): UseChatStream {
   );
 
   return { chatId, turns, isStreaming, isLoadingHistory, send, cancel };
-}
+};

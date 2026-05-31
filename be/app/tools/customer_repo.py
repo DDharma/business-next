@@ -1,23 +1,13 @@
-"""Read-only DAO functions used by the retrieve node."""
-
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+from ..constants import MAX_CANDIDATES, PRODUCT_HAS_COLUMN, TXN_WINDOW_DAYS
 from ..db import get_db
 from ..schemas import Filters
 
-# Map product code → the "has_*" customer column. Customers already holding
-# the target product are excluded by default (`Filters.exclude_existing_product_holders`).
-PRODUCT_HAS_COLUMN = {
-    "personal_loan": "has_personal_loan",
-    "credit_card": "has_credit_card",
-    "home_loan": "has_home_loan",
-}
 
-
-def get_candidates(filters: Filters, limit: int = 100) -> list[dict]:
-    """Pull candidate customers matching the requested filters."""
+def get_candidates(filters: Filters, limit: int = MAX_CANDIDATES) -> list[dict]:
     db = get_db()
     q = db.table("customers").select("*")
 
@@ -32,18 +22,13 @@ def get_candidates(filters: Filters, limit: int = 100) -> list[dict]:
         if col:
             q = q.eq(col, False)
 
-    # Order by income desc so the heuristic has a sensible starting pool;
-    # the score node will re-rank within this set.
     q = q.order("monthly_income", desc=True).limit(limit)
-
-    res = q.execute()
-    return res.data or []
+    return q.execute().data or []
 
 
 def get_recent_transactions(
-    customer_ids: list[str], days: int = 90
+    customer_ids: list[str], days: int = TXN_WINDOW_DAYS
 ) -> dict[str, list[dict]]:
-    """Return {customer_id: [txns…]} for the requested window."""
     if not customer_ids:
         return {}
 

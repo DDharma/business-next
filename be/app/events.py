@@ -1,13 +1,3 @@
-"""
-Event emitter helpers + an EventBus used by the streaming /chat endpoint.
-
-Nodes push StepEvents via a sync `emit` callable on the GraphState. For the
-CLI driver this is just `print`. For the HTTP endpoint we use `EventBus`:
-nodes (running in a worker thread) push into a thread-safe queue.Queue,
-and the async NDJSON generator drains the queue via `run_in_executor` so
-events stream to the browser in real time.
-"""
-
 from __future__ import annotations
 
 import asyncio
@@ -19,16 +9,15 @@ from .schemas import CustomerCard, StepEvent
 EmitFn = Callable[[StepEvent], None]
 
 
-# ── module-level helpers used by the nodes ───────────────────────────────
-
 def _emit(state: dict, event: StepEvent) -> None:
     emit: EmitFn | None = state.get("emit")
-    if emit is not None:
-        try:
-            emit(event)
-        except Exception:
-            # Never let an emit failure break graph execution
-            pass
+    if emit is None:
+        return
+    try:
+        emit(event)
+    except Exception:
+        # An emit failure must never break graph execution.
+        pass
 
 
 def node_started(state: dict, node: str, label: str) -> None:
@@ -59,30 +48,24 @@ def error(state: dict, message: str) -> None:
     _emit(state, StepEvent(type="error", message=message))
 
 
-# ── EventBus for streaming ───────────────────────────────────────────────
-
 _SENTINEL = object()
 
 
 class EventBus:
-    """
-    Thread-safe pub/sub for a single request. The graph (running in a
-    worker thread) calls `bus.emit(event)`; the async NDJSON generator
-    calls `async for ev in bus.stream(): ...`.
-    """
+    """Thread-safe pub/sub between the sync graph (worker thread) and the
+    async NDJSON generator."""
 
     def __init__(self, max_size: int = 1024) -> None:
         self._q: queue.Queue = queue.Queue(maxsize=max_size)
         self._closed = False
 
-    # Called from the worker thread (sync context)
     def emit(self, event: StepEvent) -> None:
         if self._closed:
             return
         try:
             self._q.put_nowait(event)
         except queue.Full:
-            # Drop oldest, keep latest — better than blocking the graph
+            # Drop oldest, keep latest — never block the graph thread.
             try:
                 self._q.get_nowait()
             except queue.Empty:
@@ -90,16 +73,15 @@ class EventBus:
             self._q.put_nowait(event)
 
     def close(self) -> None:
-        """Signal end-of-stream to consumers."""
-        if not self._closed:
-            self._closed = True
-            try:
-                self._q.put_nowait(_SENTINEL)  # type: ignore[arg-type]
-            except queue.Full:
-                pass
+        if self._closed:
+            return
+        self._closed = True
+        try:
+            self._q.put_nowait(_SENTINEL)  # type: ignore[arg-type]
+        except queue.Full:
+            pass
 
     async def stream(self) -> AsyncIterator[StepEvent]:
-        """Drain the queue from an async context until close()."""
         loop = asyncio.get_running_loop()
         while True:
             item = await loop.run_in_executor(None, self._q.get)

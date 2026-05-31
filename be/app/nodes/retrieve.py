@@ -1,10 +1,9 @@
-"""Pull candidate customers + their recent transactions from Supabase."""
-
 from __future__ import annotations
 
 import time
 
 from .. import events
+from ..constants import MAX_CANDIDATES, TXN_WINDOW_DAYS
 from ..state import GraphState
 from ..tools import customer_repo
 
@@ -21,7 +20,7 @@ def run(state: GraphState) -> GraphState:
         state, "retrieve", "supabase.customers",
         filters.model_dump(exclude_none=True) or {"all": True},
     )
-    candidates = customer_repo.get_candidates(filters, limit=80)
+    candidates = customer_repo.get_candidates(filters, limit=MAX_CANDIDATES)
     events.tool_result(
         state, "retrieve", "supabase.customers",
         f"{len(candidates)} candidates",
@@ -29,15 +28,14 @@ def run(state: GraphState) -> GraphState:
 
     ids = [c["id"] for c in candidates]
     events.tool_call(state, "retrieve", "supabase.transactions",
-                     {"customer_ids": len(ids), "window_days": 180})
-    txns = customer_repo.get_recent_transactions(ids, days=180)
+                     {"customer_ids": len(ids), "window_days": TXN_WINDOW_DAYS})
+    txns = customer_repo.get_recent_transactions(ids, days=TXN_WINDOW_DAYS)
     total_txns = sum(len(v) for v in txns.values())
     events.tool_result(
         state, "retrieve", "supabase.transactions",
         f"{total_txns} transactions across {len(ids)} customers",
     )
 
-    # Cache product catalog once per run
     products = customer_repo.get_products()
 
     events.node_finished(state, "retrieve", int((time.monotonic() - started) * 1000))

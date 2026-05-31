@@ -1,5 +1,3 @@
-"""Match each top-scored customer to the best-fit product."""
-
 from __future__ import annotations
 
 import time

@@ -1,11 +1,3 @@
-"""
-Draft a personalized WhatsApp message + opener for each recommended customer.
-
-One LLM call per customer. Gemma-3-4B can be slow, so we keep the prompt
-tight and the temperature modest. JSON is parsed with the same multi-method
-fallback used by parse_intent.
-"""
-
 from __future__ import annotations
 
 import json
@@ -51,8 +43,7 @@ def _ask_llm(prompt_vars: dict[str, Any]) -> _Draft | None:
     for method in ("json_schema", "json_mode", None):
         try:
             if method:
-                draft = llm.with_structured_output(_Draft, method=method).invoke(messages)
-                return draft  # type: ignore[return-value]
+                return llm.with_structured_output(_Draft, method=method).invoke(messages)  # type: ignore[return-value]
             raw = llm.invoke(messages)
             content = raw.content if hasattr(raw, "content") else str(raw)
             content = (
@@ -90,7 +81,6 @@ def run(state: GraphState) -> GraphState:
 
     for cust, product, reason in state.get("recommended", []):
         if product is None:
-            # No eligible product — skip, but tell the user via an event
             events.tool_result(
                 state, "draft_messages", "skip",
                 f"{cust['name']} — {reason}",

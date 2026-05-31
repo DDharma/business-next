@@ -1,4 +1,4 @@
-// Mirror of be/app/schemas.py — kept in sync by hand.
+import type { MessageRole } from "@/utils/enums";
 
 export type ScoreFactor = {
   name: string;
@@ -21,8 +21,6 @@ export type CustomerCard = {
   opener: string | null;
 };
 
-// Per-node events emitted by the agent. The terminal "done" event is
-// kept separate in lib/stream.ts since it carries stream-only fields.
 export type StepEvent =
   | { type: "node_started"; node: string; label: string }
   | { type: "tool_call"; node: string; tool: string; args: Record<string, unknown> }
@@ -41,7 +39,7 @@ export type ChatSummary = {
 export type ChatMessage = {
   id: string;
   chat_id: string;
-  role: "user" | "assistant";
+  role: MessageRole;
   content: string;
   metadata: {
     cards?: CustomerCard[];

@@ -8,29 +8,33 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { CustomerCard as Card_ } from "@/lib/types";
+import { SCORE_THRESHOLDS } from "@/utils/constants";
 
-function formatINR(v: number) {
-  return new Intl.NumberFormat("en-IN", {
+const formatINR = (v: number): string =>
+  new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(v);
-}
 
-function scoreColor(score: number) {
-  if (score >= 80) return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-  if (score >= 65) return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+const scoreColor = (score: number): string => {
+  if (score >= SCORE_THRESHOLDS.high)
+    return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+  if (score >= SCORE_THRESHOLDS.mid)
+    return "bg-amber-500/10 text-amber-400 border-amber-500/30";
   return "bg-zinc-500/10 text-zinc-400 border-zinc-500/30";
-}
+};
 
-export function CustomerCard({ card }: { card: Card_ }) {
+type Props = { card: Card_ };
+
+export const CustomerCard = ({ card }: Props) => {
   const [copied, setCopied] = useState(false);
 
-  async function copyMessage() {
+  const copyMessage = async () => {
     await navigator.clipboard.writeText(card.whatsapp_message);
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);
-  }
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -75,12 +79,12 @@ export function CustomerCard({ card }: { card: Card_ }) {
                 key={f.name}
                 className="flex items-center justify-between text-xs"
               >
-                <span className="text-zinc-300">
-                  {f.name.replace(/_/g, " ")}
-                </span>
+                <span className="text-zinc-300">{f.name.replace(/_/g, " ")}</span>
                 <span className="text-zinc-500 tabular-nums">
                   {f.raw.toFixed(0)}/100
-                  <span className="ml-1 text-zinc-600">· w {f.weight.toFixed(2)}</span>
+                  <span className="ml-1 text-zinc-600">
+                    · w {f.weight.toFixed(2)}
+                  </span>
                 </span>
               </div>
             ))}
@@ -116,4 +120,4 @@ export function CustomerCard({ card }: { card: Card_ }) {
       </CardContent>
     </Card>
   );
-}
+};

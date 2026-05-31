@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { StepEvent } from "@/lib/types";
 
-function renderEvent(ev: StepEvent, i: number) {
+const renderEvent = (ev: StepEvent, i: number) => {
   switch (ev.type) {
     case "node_started":
       return (
@@ -50,26 +50,24 @@ function renderEvent(ev: StepEvent, i: number) {
       );
     case "error":
       return (
-        <div key={i} className="text-rose-400">!! {ev.message}</div>
+        <div key={i} className="text-rose-400">
+          !! {ev.message}
+        </div>
       );
     default:
       return null;
   }
-}
+};
 
-export function ReasoningLog({
-  events,
-  isStreaming,
-}: {
-  events: StepEvent[];
-  isStreaming: boolean;
-}) {
+type Props = { events: StepEvent[]; isStreaming: boolean };
+
+export const ReasoningLog = ({ events, isStreaming }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = ref.current?.querySelector("[data-radix-scroll-area-viewport]") as
-      | HTMLElement
-      | null;
+    const el = ref.current?.querySelector(
+      "[data-radix-scroll-area-viewport]",
+    ) as HTMLElement | null;
     if (el) el.scrollTop = el.scrollHeight;
   }, [events.length]);
 
@@ -92,4 +90,4 @@ export function ReasoningLog({
       </ScrollArea>
     </div>
   );
-}
+};
