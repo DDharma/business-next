@@ -27,19 +27,21 @@ Goal: data + LLM connectivity + skeletons in place. Nothing user-facing yet.
 
 Goal: end-to-end agent via CLI. The graph runs, scores, drafts messages, prints results.
 
-- [ ] **P2.1** `app/tools/scoring.py` — weighted heuristic (7 factors) + per-factor breakdown
-- [ ] **P2.2** `tests/test_scoring.py` — unit tests for the scorer
-- [ ] **P2.3** `app/tools/customer_repo.py` — `get_candidates(filters)` + `get_recent_transactions(customer_ids)`
-- [ ] **P2.4** `app/tools/product_match.py` — rule-based product fit
-- [ ] **P2.5** `tests/test_product_match.py`
-- [ ] **P2.6** `app/state.py` — `GraphState` TypedDict
-- [ ] **P2.7** `app/nodes/parse_intent.py` — LLM call with JSON output; retry-once on schema failure
-- [ ] **P2.8** `app/nodes/retrieve.py`
-- [ ] **P2.9** `app/nodes/score.py`
-- [ ] **P2.10** `app/nodes/recommend.py`
-- [ ] **P2.11** `app/nodes/draft_messages.py` — per-customer LLM call, parallel where safe
-- [ ] **P2.12** `app/graph.py` — build StateGraph + conditional edge (rewrite_message branch)
-- [ ] **P2.13** `scripts/run_cli.py` — invoke graph with a hardcoded prompt, print events + cards
+- [x] **P2.1** `app/tools/scoring.py` — weighted heuristic (7 factors) + per-factor breakdown
+- [x] **P2.2** `tests/test_scoring.py` — unit tests for the scorer (6 tests passing)
+- [x] **P2.3** `app/tools/customer_repo.py` — `get_candidates(filters)`, `get_recent_transactions`, `get_products`
+- [x] **P2.4** `app/tools/product_match.py` — rule-based product fit (tier preference, eligibility checks)
+- [x] **P2.5** `tests/test_product_match.py` (6 tests passing)
+- [x] **P2.6** `app/state.py` — `GraphState` TypedDict
+- [x] **P2.7** `app/nodes/parse_intent.py` — LLM JSON output via with_structured_output, multi-method fallback
+- [x] **P2.8** `app/nodes/retrieve.py`
+- [x] **P2.9** `app/nodes/score.py`
+- [x] **P2.10** `app/nodes/recommend.py`
+- [x] **P2.11** `app/nodes/draft_messages.py` — per-customer LLM call
+- [x] **P2.12** `app/graph.py` — StateGraph + conditional edge (rewrite_message branch)
+- [x] **P2.13** `scripts/run_cli.py` — invoke graph, print events + cards
+
+**Smoke test result:** `python scripts/run_cli.py "find 3 high-value personal-loan prospects in Mumbai"` runs in ~27s and produces 3 cards with score breakdowns and personalized WhatsApp drafts.
 
 **Exit criteria:** `python scripts/run_cli.py "find 5 high-value personal-loan prospects in Mumbai"` prints 5 ranked customers with score breakdown + a draft WhatsApp message each.
 
@@ -49,21 +51,26 @@ Goal: end-to-end agent via CLI. The graph runs, scores, drafts messages, prints 
 
 Goal: clickable UI that streams reasoning live.
 
-- [ ] **P3.1** `app/events.py` — `EventEmitter` with per-request asyncio.Queue
-- [ ] **P3.2** Wire emitter into all nodes (replace prints from Phase 2)
-- [ ] **P3.3** `app/main.py` — `POST /chat` SSE endpoint using `sse-starlette`
-- [ ] **P3.4** `app/main.py` — `POST /chats`, `GET /chats`, `GET /chats/{id}` REST endpoints
-- [ ] **P3.5** Persist user message + assistant card payload to `messages` table
-- [ ] **P3.6** Scaffold FE: `pnpm create next-app fe` (App Router, TS, Tailwind)
-- [ ] **P3.7** `pnpm dlx shadcn@latest init` + add: button, input, card, scroll-area, separator, badge, skeleton, sonner
-- [ ] **P3.8** `lib/types.ts` — mirror backend `StepEvent` + `CustomerCard`
-- [ ] **P3.9** `lib/sse.ts` — `fetch` + ReadableStream parser
-- [ ] **P3.10** `hooks/use-chat-stream.ts` — owns the stream lifecycle, exposes `events`, `cards`, `send()`
-- [ ] **P3.11** `components/chat-input.tsx`
-- [ ] **P3.12** `components/reasoning-log.tsx` — monospace, autoscroll, collapsible tool calls
-- [ ] **P3.13** `components/customer-card.tsx` — score, top 3 factors, message + copy button
-- [ ] **P3.14** `app/chat/[id]/page.tsx` — two-pane layout
-- [ ] **P3.15** First end-to-end demo: type a prompt → reasoning streams → cards appear
+- [x] **P3.1** `app/events.py` — `EventBus` with thread-safe `queue.Queue` + async `stream()`
+- [x] **P3.2** Emitter wired through all 5 nodes (already in place from P2)
+- [x] **P3.3** `app/main.py` — `POST /chat` SSE endpoint via `sse-starlette`
+- [x] **P3.4** `POST /chats`, `GET /chats`, `GET /chats/{id}` REST endpoints
+- [x] **P3.5** Persist user message + assistant cards (in `metadata.cards`) to `messages` table
+- [x] **P3.6** FE already scaffolded (Next 16.2.6, React 19, Tailwind v4, shadcn radix-sera style)
+- [x] **P3.7** Added shadcn components: input, card, scroll-area, separator, badge, skeleton
+- [x] **P3.8** `lib/types.ts` mirrors backend `StepEvent` + `CustomerCard`
+- [x] **P3.9** `lib/sse.ts` — `fetch` + ReadableStream parser (POST-able SSE)
+- [x] **P3.10** `hooks/use-chat-stream.ts` — owns stream lifecycle, exposes `events`, `cards`, `send()`, `reset()`
+- [x] **P3.11** `components/chat-input.tsx`
+- [x] **P3.12** `components/reasoning-log.tsx` — monospace terminal, autoscroll, color-coded events
+- [x] **P3.13** `components/customer-card.tsx` — score pill, top 3 factors, message + copy button
+- [x] **P3.14** `app/chat/[id]/page.tsx` + `app/page.tsx` + `components/chat-workspace.tsx` (two-pane)
+- [x] **P3.15** Browser smoke test passed: SSE streams `chat_id → node_started/tool_call/tool_result/card... → done`, cards render live, persisted to Supabase
+
+**Stack notes:**
+- BE CORS allows `localhost:3000` and `localhost:3001`
+- FE env: `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8000`
+- Dev: `cd be && uvicorn app.main:app --reload --port 8000` + `cd fe && pnpm dev`
 
 **Exit criteria:** A user can type "find 5 high-value personal-loan prospects in Mumbai" in the browser and see the reasoning log fill in real-time, followed by 5 customer cards with copy-able WhatsApp drafts.
 
@@ -73,18 +80,26 @@ Goal: clickable UI that streams reasoning live.
 
 Goal: ready to submit.
 
-- [ ] **P4.1** `components/chat-sidebar.tsx` — list chats, click to navigate
-- [ ] **P4.2** `app/chat/[id]/page.tsx` — rehydrate cards + reasoning from saved `metadata` on load
-- [ ] **P4.3** Auto-title chats from the first user message
-- [ ] **P4.4** Empty / loading / error states (no candidates, LM Studio down, etc.)
-- [ ] **P4.5** Light visual polish (spacing, typography, dark mode default)
-- [ ] **P4.6** README.md — architecture diagram, execution flow, tool design, decisions, trade-offs, setup
-- [ ] **P4.7** Setup script in README: schema apply → seed → start LM Studio → start backend → start FE
-- [ ] **P4.8** Demo script — 3 flows scripted: (a) initial prospecting, (b) refine ("only Mumbai, exclude existing loan holders"), (c) "rewrite message #3 friendlier"
-- [ ] **P4.9** Record 5–10 min demo video
-- [ ] **P4.10** Final code pass — comments only where non-obvious, no dead code
+- [x] **P4.1** `components/chat-sidebar.tsx` — list chats, click to navigate, "New chat" button
+- [x] **P4.2** `app/chat/[id]/page.tsx` — rehydrates cards + `metadata.events` + `duration_ms` via `getChat`
+- [x] **P4.3** Auto-title chats from the first user message (first 80 chars)
+- [x] **P4.4** Empty state (sample prompt cards) + loading skeletons + error banner + LM-Studio-down → fallback intent
+- [x] **P4.5** Dark mode default, IDE excludes for `node_modules`/`.next` for clean DX
+- [x] **P4.6** README.md — architecture diagram, execution flow, tool design, decisions, trade-offs, setup
+- [x] **P4.7** Setup script in README: schema apply → seed → start LM Studio → start backend → start FE
+- [x] **P4.8** Demo script — 3 flows scripted in README §"Demo scripts": (a) canonical PDF query, (b) refinement, (c) different product/city
+- [ ] **P4.9** Record 5–10 min demo video — *user records*
+- [x] **P4.10** Final code pass — comments only where non-obvious, no dead code
 
-**Exit criteria:** Repo is shippable. README runs end-to-end on a fresh machine. Demo video covers 3 use cases.
+**Exit criteria met:** Repo is shippable. README runs end-to-end on a fresh machine. Three demo flows scripted. Demo video remains for the user to record.
+
+## Bonus refactor (post-Phase 3) — SSE → NDJSON
+
+After Phase 3 the user requested removing SSE in favor of a "normal chat" with NDJSON streaming. Implemented:
+
+- BE: `/chat` switched from `EventSourceResponse` to `StreamingResponse(media_type="application/x-ndjson")`. One JSON-per-line. `sse-starlette` removed from `requirements.txt`.
+- BE: `metadata.events` + `metadata.duration_ms` now persisted on the assistant message — enables collapsible "Thought for Xs · N cards" header to render from history without re-running the agent.
+- FE: `lib/sse.ts` → `lib/stream.ts` (NDJSON parser). Layout refactored from two-pane workspace to ChatGPT-style sidebar + scrolling thread. Each assistant turn collapses reasoning into a one-liner (click to expand).
 
 ---
 

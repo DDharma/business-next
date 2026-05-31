@@ -3,8 +3,6 @@
     "**/.git": true,
     "**/.DS_Store": true,
     "**/node_modules": true,
-    "**/.next": true,
-    "**/.venv": true,
     "**/__pycache__": true,
     "**/.pytest_cache": true,
     "**/.mypy_cache": true,

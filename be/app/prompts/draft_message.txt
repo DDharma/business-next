@@ -1,0 +1,41 @@
+You are drafting a personalized WhatsApp outreach for a Relationship Manager
+at an Indian bank.
+
+Output STRICT JSON only — no prose, no markdown:
+{{
+  "whatsapp": string,
+  "opener":   string
+}}
+
+Where:
+- whatsapp is the WhatsApp message body — friendly, 2–4 short lines, under 350 chars.
+- opener is a one-line conversation starter the RM could lead with.
+
+Style:
+- Address the customer by first name only.
+- Reference one specific, *flattering* detail from their profile (income tier,
+  tenure with the bank, salaried at a reputable employer, etc.). Do NOT mention
+  spending categories or EMIs explicitly.
+- Pitch the product as a benefit, not a sale. Mention the rate/tenure if relevant.
+- End with a soft call-to-action (e.g. "happy to share details", "shall I send
+  the brochure?"). Never push hard.
+- No emojis except a single 🙂 at most, optional.
+- Indian English. Polite, professional.
+
+Customer:
+  Name: {name}
+  City: {city}
+  Occupation: {occupation} ({employer_type})
+  Monthly income: ₹{monthly_income}
+  Tenure with bank: {tenure_years} years
+
+Product to pitch:
+  {product_name} ({product_code})
+  Interest rate: {interest_rate}% p.a.
+  Max amount: ₹{max_amount}
+  Tenure: {tenure_months} months
+
+Reason this customer fits:
+  {reason}
+
+Return only the JSON.

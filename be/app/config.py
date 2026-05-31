@@ -18,7 +18,12 @@ class Settings(BaseSettings):
     lm_studio_url: str = "http://localhost:1234/v1"
     lm_studio_model: str = "google/gemma-3-4b"
 
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+    ]
 
 
 @lru_cache

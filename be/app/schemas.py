@@ -53,7 +53,7 @@ class CustomerCard(BaseModel):
     opener: str | None = None
 
 
-# ── SSE step events ──────────────────────────────────────────────────────
+# ── Streaming step events ────────────────────────────────────────────────
 
 class StepEvent(BaseModel):
     type: Literal[

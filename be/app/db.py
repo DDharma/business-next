@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from functools import lru_cache
+from typing import Any
 
 from supabase import Client, create_client
 
@@ -28,3 +31,62 @@ def ping() -> bool:
         return True
     except Exception:
         return False
+
+
+# ── Chats / messages ─────────────────────────────────────────────────────
+
+def create_chat(title: str) -> dict:
+    res = get_db().table("chats").insert({"title": title}).execute()
+    return res.data[0]
+
+
+def get_chat(chat_id: str) -> dict | None:
+    res = get_db().table("chats").select("*").eq("id", chat_id).limit(1).execute()
+    return (res.data or [None])[0]
+
+
+def list_chats(limit: int = 50) -> list[dict]:
+    res = (
+        get_db()
+        .table("chats")
+        .select("*")
+        .order("updated_at", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return res.data or []
+
+
+def touch_chat(chat_id: str) -> None:
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+    get_db().table("chats").update({"updated_at": now}).eq("id", chat_id).execute()
+
+
+def add_message(
+    chat_id: str,
+    role: str,
+    content: str,
+    metadata: dict[str, Any] | None = None,
+) -> dict:
+    payload = {
+        "chat_id": chat_id,
+        "role": role,
+        "content": content,
+        "metadata": metadata or {},
+    }
+    res = get_db().table("messages").insert(payload).execute()
+    touch_chat(chat_id)
+    return res.data[0]
+
+
+def list_messages(chat_id: str) -> list[dict]:
+    res = (
+        get_db()
+        .table("messages")
+        .select("*")
+        .eq("chat_id", chat_id)
+        .order("created_at")
+        .execute()
+    )
+    return res.data or []
