@@ -8,16 +8,16 @@ Tracker for the build. Update checkboxes as each item lands. `[ ]` = todo, `[~]`
 
 Goal: data + LLM connectivity + skeletons in place. Nothing user-facing yet.
 
-- [ ] **P1.1** Apply schema to Supabase (`scripts/apply_schema.sql`)
-- [ ] **P1.2** Rename `be/qpp` → `be/app`; create subfolders (`nodes/`, `tools/`, `prompts/`, `tests/`, `scripts/`)
-- [ ] **P1.3** Populate `be/requirements.txt` (fastapi, uvicorn, langgraph, langchain, langchain-openai, supabase, pydantic, python-dotenv, faker, httpx, sse-starlette)
-- [ ] **P1.4** `app/config.py` — env loading (SUPABASE_URL, SUPABASE_KEY, LM_STUDIO_URL, LM_STUDIO_MODEL)
-- [ ] **P1.5** `app/llm.py` — `ChatOpenAI(base_url, model)` factory; smoke test it returns a response
-- [ ] **P1.6** `app/db.py` — Supabase client singleton + first DAO (`list_customers`)
-- [ ] **P1.7** `app/seed.py` — Faker seeder (400 customers, 12mo transactions, 4 products, ~15% prospect cluster)
-- [ ] **P1.8** Run seeder; eyeball counts and a sample customer with transactions
-- [ ] **P1.9** `app/schemas.py` — Pydantic: `IntentSchema`, `CustomerCard`, `StepEvent`, `ScoreFactor`
-- [ ] **P1.10** FastAPI skeleton (`app/main.py`) with a `/health` endpoint that returns LM Studio + Supabase reachability
+- [ ] **P1.1** Apply schema to Supabase (`scripts/apply_schema.sql`) — *user runs in Supabase SQL Editor*
+- [x] **P1.2** Rename `be/qpp` → `be/app`; create subfolders (`nodes/`, `tools/`, `prompts/`, `tests/`, `scripts/`)
+- [x] **P1.3** Populate `be/requirements.txt`
+- [x] **P1.4** `app/config.py` — env loading (SUPABASE_URL, SUPABASE_KEY, LM_STUDIO_URL, LM_STUDIO_MODEL)
+- [x] **P1.5** `app/llm.py` — `ChatOpenAI(base_url, model)` factory *(smoke test pending — needs LM Studio running)*
+- [x] **P1.6** `app/db.py` — Supabase client singleton + `count_customers`, `ping`
+- [x] **P1.7** `app/seed.py` — Faker seeder (400 customers, 12mo transactions, 4 products, ~15% prospect cluster)
+- [ ] **P1.8** Run seeder; eyeball counts and a sample customer with transactions — *user runs after P1.1*
+- [x] **P1.9** `app/schemas.py` — Pydantic: `IntentSchema`, `CustomerCard`, `StepEvent`, `ScoreFactor`
+- [x] **P1.10** FastAPI skeleton (`app/main.py`) with a `/health` endpoint that returns LM Studio + Supabase reachability
 
 **Exit criteria:** `curl /health` returns `{ supabase: ok, lm_studio: ok }` and `select count(*) from customers` returns 400.
 
