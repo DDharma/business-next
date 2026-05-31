@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { getChat } from "@/lib/api";
 import { streamChat } from "@/lib/stream";
@@ -26,8 +26,9 @@ export type UseChatStream = {
   turns: Turn[];
   isStreaming: boolean;
   isLoadingHistory: boolean;
-  send: (message: string) => Promise<void>;
+  send: (message: string) => Promise<string | null>;
   cancel: () => void;
+  loadChat: (id: string | null) => Promise<void>;
 };
 
 const newTurnId = (): string => Math.random().toString(36).slice(2, 10);
@@ -57,41 +58,55 @@ const turnsFromChat = (chat: Chat): Turn[] => {
   return out;
 };
 
-export const useChatStream = (initialChatId: string | null): UseChatStream => {
-  const [chatId, setChatId] = useState<string | null>(initialChatId);
+export const useChatStream = (): UseChatStream => {
+  const [chatId, setChatId] = useState<string | null>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isLoadingHistory, setLoadingHistory] = useState(!!initialChatId);
-  const abortRef = useRef<AbortController | null>(null);
+  const [isLoadingHistory, setLoadingHistory] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const chatIdRef = useRef<string | null>(null);
+  chatIdRef.current = chatId;
+
+  const abortRef = useRef<AbortController | null>(null);
+  const loadInflightRef = useRef<string | null>(null);
+
+  const loadChat = useCallback(async (id: string | null) => {
+    // No-op if we already have this chat loaded (or are loading it).
+    // This is what kills the post-stream remount flash: router.replace
+    // fires AFTER chatId is set internally, so by the time URL→loadChat
+    // runs, the id matches and we bail out.
+    if (id === chatIdRef.current) return;
+    if (id && loadInflightRef.current === id) return;
+
     abortRef.current?.abort();
-    setChatId(initialChatId);
+    abortRef.current = null;
+
+    setChatId(id);
     setTurns([]);
     setIsStreaming(false);
 
-    if (!initialChatId) {
+    if (!id) {
       setLoadingHistory(false);
+      loadInflightRef.current = null;
       return;
     }
 
+    loadInflightRef.current = id;
     setLoadingHistory(true);
-    (async () => {
-      try {
-        const chat = await getChat(initialChatId);
-        if (!cancelled) setTurns(turnsFromChat(chat));
-      } catch (e) {
-        console.error("rehydrate failed", e);
-      } finally {
-        if (!cancelled) setLoadingHistory(false);
+    try {
+      const chat = await getChat(id);
+      if (loadInflightRef.current === id) {
+        setTurns(turnsFromChat(chat));
       }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [initialChatId]);
+    } catch (e) {
+      console.error("rehydrate failed", e);
+    } finally {
+      if (loadInflightRef.current === id) {
+        loadInflightRef.current = null;
+        setLoadingHistory(false);
+      }
+    }
+  }, []);
 
   const cancel = useCallback(() => {
     abortRef.current?.abort();
@@ -99,9 +114,9 @@ export const useChatStream = (initialChatId: string | null): UseChatStream => {
   }, []);
 
   const send = useCallback(
-    async (message: string) => {
+    async (message: string): Promise<string | null> => {
       const text = message.trim();
-      if (!text || isStreaming) return;
+      if (!text || isStreaming) return chatIdRef.current;
 
       const turnId = newTurnId();
       setTurns((prev) => [
@@ -130,7 +145,7 @@ export const useChatStream = (initialChatId: string | null): UseChatStream => {
       };
 
       await streamChat(
-        { chat_id: chatId, message: text },
+        { chat_id: chatIdRef.current, message: text },
         {
           signal: ac.signal,
           onEvent: (ev) => {
@@ -167,9 +182,11 @@ export const useChatStream = (initialChatId: string | null): UseChatStream => {
           },
         },
       );
+
+      return chatIdRef.current;
     },
-    [chatId, isStreaming],
+    [isStreaming],
   );
 
-  return { chatId, turns, isStreaming, isLoadingHistory, send, cancel };
+  return { chatId, turns, isStreaming, isLoadingHistory, send, cancel, loadChat };
 };
