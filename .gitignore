@@ -22,6 +22,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 # NOTE: be/.env holds live secrets (db_password, SUPABASE_KEY) — keep ignored.
 .env*
+!.env.example
 
 # ---------------------------------------------------------------------------
 # Frontend — fe/ (Next.js, pnpm)
