@@ -1,0 +1,70 @@
+# Combined .gitignore for the monorepo (fe = Next.js, be = Python)
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# ---------------------------------------------------------------------------
+# Shared
+# ---------------------------------------------------------------------------
+.DS_Store
+*.pem
+
+# editors
+.vscode/
+.idea/
+
+# debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+# NOTE: be/.env holds live secrets (db_password, SUPABASE_KEY) — keep ignored.
+.env*
+
+# ---------------------------------------------------------------------------
+# Frontend — fe/ (Next.js, pnpm)
+# ---------------------------------------------------------------------------
+
+# dependencies
+fe/node_modules
+fe/.pnp
+fe/.pnp.*
+fe/.yarn/*
+!fe/.yarn/patches
+!fe/.yarn/plugins
+!fe/.yarn/releases
+!fe/.yarn/versions
+
+# testing
+fe/coverage
+
+# next.js
+fe/.next/
+fe/out/
+
+# production
+fe/build
+
+# typescript
+fe/*.tsbuildinfo
+fe/next-env.d.ts
+
+# vercel
+.vercel
+
+# ---------------------------------------------------------------------------
+# Backend — be/ (Python)
+# ---------------------------------------------------------------------------
+
+# virtual environments
+be/.venv/
+be/venv/
+
+# byte-compiled / caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
